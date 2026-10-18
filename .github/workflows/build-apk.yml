@@ -2,6 +2,10 @@ name: Build Islamic Life APK
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'IslamicLifeApp_Offline_V3_Source.zip'
+      - '.github/workflows/build-apk.yml'
 
 jobs:
   build:
@@ -11,25 +15,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle
+      - name: Extract Android project
+        run: |
+          unzip -q IslamicLifeApp_Offline_V3_Source.zip -d extracted
+          ls -la extracted
+          ls -la extracted/IslamicLifeApp_Android
+
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
 
-      - name: Extract Android project
-        run: |
-          unzip -o IslamicLifeApp_Android_BuildReady.zip -d extracted
-
       - name: Build APK
-        run: |
-          cd extracted/IslamicLifeApp_Android
-          gradle assembleDebug
+        working-directory: extracted/IslamicLifeApp_Android
+        run: gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
