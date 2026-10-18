@@ -1,43 +1,31 @@
 name: Build Islamic Life APK
-
 on:
   workflow_dispatch:
   push:
     paths:
-      - 'IslamicLifeApp_Offline_V3_Source.zip'
+      - 'IslamicLifeApp_Corrected_Project.zip'
       - '.github/workflows/build-apk.yml'
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-
-      - name: Extract Android project
+      - name: Extract Android project ZIP
         run: |
-          unzip -q IslamicLifeApp_Offline_V3_Source.zip -d extracted
-          ls -la extracted
-          ls -la extracted/IslamicLifeApp_Android
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+          test -f IslamicLifeApp_Corrected_Project.zip || { echo 'Upload IslamicLifeApp_Corrected_Project.zip to repository root first'; exit 1; }
+          mkdir -p /tmp/islamic-project
+          unzip -q IslamicLifeApp_Corrected_Project.zip -d /tmp/islamic-project
+          cp -a /tmp/islamic-project/. .
+      - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
-
-      - name: Build APK
-        working-directory: extracted/IslamicLifeApp_Android
+      - name: Build debug APK
         run: gradle assembleDebug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: IslamicLifeApp-APK
-          path: extracted/IslamicLifeApp_Android/app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
